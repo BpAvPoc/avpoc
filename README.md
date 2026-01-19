@@ -1,10 +1,10 @@
-# Node.js Hello-Name (Containerd + Packer)
+# Node.js Hello-Name (rootless Containerd)
 
-A DevOps project demonstrating a containerized Node.js application built with **Packer**, run via **rootless nerdctl/containerd**, and automated with **GitHub Actions**.
+A DevOps project demonstrating a containerized Node.js application built with (pseudo-)**Packer**, run via **rootless nerdctl/containerd**, and automated with **GitHub Actions**.
 
 ## 🚀 Features
 - **Rootless Execution**: No `sudo` required for container management.
-- **Packer Built**: Immutable image creation without a standard Dockerfile.
+- **Packer Built** (Fake): Pseudo-immutable image creation. Only here for tech namedropping since it just runs a Dockerfile build using nerdctl.
 - **Multi-Environment**: Logic to handle `development` and `production` modes.
 - **Containerd Native**: Optimized for `nerdctl` instead of the full Docker daemon.
 
