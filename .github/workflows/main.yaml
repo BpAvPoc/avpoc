@@ -12,7 +12,9 @@ jobs:
         run: |
           wget https://github.com/containerd/nerdctl/releases/download/v1.7.2/nerdctl-full-1.7.2-linux-amd64.tar.gz
           sudo tar -C /usr/local -xzf nerdctl-full-1.7.2-linux-amd64.tar.gz
-          # Install rootless containerd with buildkit
+          # Install rootless containerd
+          containerd-rootless-setuptool.sh install
+          # Install buildkit
           containerd-rootless-setuptool.sh install-buildkit
           sleep 5
 
