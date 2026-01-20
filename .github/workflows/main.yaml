@@ -9,7 +9,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: avpoc-hello-node-app
-  IMAGE_PATH: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
 jobs:
   test:
@@ -109,6 +108,8 @@ jobs:
           path: ${{ env.IMAGE_NAME }}.tar
 
       - name: Tag and Push
+        env:
+          IMAGE_PATH: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
           # Login using global registry variable
           echo "${{ secrets.GITHUB_TOKEN }}" | nerdctl login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
