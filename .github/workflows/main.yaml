@@ -61,6 +61,8 @@ jobs:
     needs: scan
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6.0.1
+      
       - name: AppArmor Override
         run: |
           cat <<EOT | sudo tee "/etc/apparmor.d/usr.local.bin.rootlesskit"
