@@ -12,14 +12,14 @@ all: build test
 
 ## 1. Build: Triggers Packer to build the image via nerdctl and export the tarball
 build:
-	@echo "==> Building with Packer (using static Dockerfile)..."
+	@echo "==> Building with Packer..."
 	packer build $(PACKER_DIR)/build.pkr.hcl
 
 ## 2. Test: Runs the verification script against a temporary container
 test:
 	@echo "==> Running automated tests..."
-	@chmod +x test-app.sh
-	./test-app.sh
+	@chmod +x test/test-app.sh
+	test/test-app.sh
 
 ## 3. Run-Dev: Starts the container in development mode (Port 3001)
 run-dev:
