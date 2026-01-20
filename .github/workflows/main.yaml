@@ -1,8 +1,70 @@
-name: CI Build and Test
-on: [push]
+name: AvPoc Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: avpoc-hello-node-app
+  IMAGE_PATH: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
 jobs:
-  build-and-test:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6.0.1
+        with:
+          # Disabling shallow clones is recommended for improving the relevancy of reporting
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.2.0
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install & Test
+        run: |
+          npm ci
+          npm test -- --coverage
+          
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 5
+
+  scan:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Download Coverage for Sonar
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Quality Gate (Enforce >80% Coverage)
+        uses: sonarsource/sonarqube-quality-gate-action@v1.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build_and_upload:
+    needs: scan
     runs-on: ubuntu-latest
     steps:
       - name: AppArmor Override
@@ -19,28 +81,6 @@ jobs:
           }
           EOT
           sudo systemctl restart apparmor.service 
-
-      - name: Checkout Code
-        uses: actions/checkout@v6.0.1
-        with:
-          # Disabling shallow clones is recommended for improving the relevancy of reporting
-          fetch-depth: 0
-
-      - name: Run Unit Tests & Coverage
-        working-directory: ./src 
-        run: |
-          npm install
-          npm test
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Quality Gate (Enforce >80% Coverage)
-        uses: sonarsource/sonarqube-quality-gate-action@v1.2.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Install nerdctl (Full)
         run: |
@@ -59,11 +99,23 @@ jobs:
         run: make build
 
       - name: Run Logic Verification
-        run: make test
+        run: make check
 
       - name: Upload Verified Artifact
         if: success() # Only upload if the tests pass
         uses: actions/upload-artifact@v6.0.0
         with:
-          name: hello-node-image
-          path: hello-node-app.tar
+          name: ${{ env.IMAGE_NAME }}
+          path: ${{ env.IMAGE_NAME }}.tar
+
+      - name: Tag and Push
+        run: |
+          # Login using global registry variable
+          echo "${{ secrets.GITHUB_TOKEN }}" | nerdctl login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          
+          # Tag and Push using global image path
+          nerdctl tag ${{ env.IMAGE_NAME }} ${{ env.IMAGE_PATH }}:latest
+          nerdctl tag ${{ env.IMAGE_NAME }} ${{ env.IMAGE_PATH }}:${{ github.sha }}
+          
+          nerdctl push ${{ env.IMAGE_PATH }}:latest
+          nerdctl push ${{ env.IMAGE_PATH }}:${{ github.sha }}

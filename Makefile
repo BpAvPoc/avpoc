@@ -1,20 +1,20 @@
 # --- Configuration ---
-IMAGE_NAME := hello-node-app
+IMAGE_NAME := avpoc-hello-node-app
 TAR_FILE   := $(IMAGE_NAME).tar
 PACKER_DIR := packer
 NERDCTL    := nerdctl
 
 # --- Main Targets ---
-.PHONY: all build test run-dev run-prod stop clean help
+.PHONY: all test scan build check run-dev run-prod stop clean help
 
-all: scan build test ## [Default] Build and run the test suite
+all: scan build check ## [Default] Build and run the test suite
 
-test-unit: ## Run unit tests with code coverage
+test: ## Run unit tests with code coverage
 	@echo "==> Running Unit Tests..."
 	npm install --prefix ./src
 	npm test --prefix ./src
 
-scan: test-unit ## Run local SonarQube analysis with coverage data
+scan: test ## Run local SonarQube analysis with coverage data
 	@echo "==> Running SonarQube Scan..."
 	$(NERDCTL) run --rm \
 		-e SONAR_HOST_URL="$(SONAR_HOST_URL)" \
@@ -26,7 +26,7 @@ build: ## Triggers Packer to build the image via nerdctl and export the tarball
 	@echo "==> Building with Packer..."
 	packer build $(PACKER_DIR)/build.pkr.hcl
 
-test: ## Runs the verification script against a temporary container
+check: ## Runs the verification script against a temporary container
 	@echo "==> Running automated tests..."
 	@chmod +x test/test-app.sh
 	test/test-app.sh
