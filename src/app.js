@@ -5,36 +5,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ENV = process.env.NODE_ENV || 'development';
 
-// 1. Add Security Headers & CSP
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             "default-src": ["'self'"],
-            "script-src": ["'self'"], // Disallows inline scripts
-            "style-src": ["'self'", "'unsafe-inline'"], // Allows our inline styles
-            "img-src": ["'self'", "data:"],
-            "upgrade-insecure-requests": [],
+            "style-src": ["'self'", "'unsafe-inline'"],
         },
     },
 }));
 
-// 2. XSS Sanitization Helper
 const sanitize = (str) => {
+    if (!str) return '';
     return str.replace(/[&<>"']/g, (m) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[m]);
 };
-
-if (ENV === 'development') {
-    app.use((req, res, next) => {
-        console.log(`[DEBUG] ${new Date().toISOString()} | ${req.method} ${req.url}`);
-        next();
-    });
-}
 
 app.get('/', (req, res) => {
     const defaultName = (ENV === 'production') ? 'User' : 'Dev';
@@ -47,12 +32,8 @@ app.get('/hello/:name', (req, res) => {
 
     res.status(200).send(`
         <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Hello App</title>
-            </head>
-            <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+        <html>
+            <body style="font-family: sans-serif; text-align: center;">
                 <h1 style="color: #2c3e50;">Hello, ${cleanName}!</h1>
                 <p>Environment: <strong style="color: ${statusColor};">${ENV}</strong></p>
             </body>
@@ -60,6 +41,9 @@ app.get('/hello/:name', (req, res) => {
     `);
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} in ${ENV} mode`);
-});
+// Important for Testing: Only listen if not in a test environment
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => console.log(`Server on ${PORT}`));
+}
+
+module.exports = app; // Export for Jest

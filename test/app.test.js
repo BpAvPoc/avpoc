@@ -1,25 +1,23 @@
 const request = require('supertest');
-const express = require('express');
-// For testing purposes, you might export 'app' from app.js
-const app = require('../src/app'); 
+const app = require('../src/app');
 
-describe('App Security and Logic', () => {
-  test('GET / should redirect to /hello/Dev (Dev Mode)', async () => {
-    const res = await request(app).get('/');
-    expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toBe('/hello/Dev');
-  });
+describe('End-to-End Logic & Security', () => {
+    test('Redirects root to /hello/Dev', async () => {
+        const res = await request(app).get('/');
+        expect(res.statusCode).toBe(302);
+        expect(res.headers.location).toBe('/hello/Dev');
+    });
 
-  test('XSS sanitization should escape script tags', async () => {
-    const payload = "<script>alert('xss')</script>";
-    const res = await request(app).get(`/hello/${encodeURIComponent(payload)}`);
-    expect(res.text).toContain('&lt;script&gt;');
-    expect(res.text).not.toContain('<script>');
-  });
+    test('Sanitizes XSS payloads', async () => {
+        const payload = "<script>alert(1)</script>";
+        const res = await request(app).get(`/hello/${encodeURIComponent(payload)}`);
+        expect(res.text).toContain('&lt;script&gt;');
+        expect(res.text).not.toContain('<script>');
+    });
 
-  test('Security headers (CSP) should be present', async () => {
-    const res = await request(app).get('/hello/User');
-    expect(res.headers).toHaveProperty('content-security-policy');
-    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
-  });
+    test('Includes Security Headers', async () => {
+        const res = await request(app).get('/hello/Test');
+        expect(res.headers).toHaveProperty('content-security-policy');
+        expect(res.headers['x-content-type-options']).toBe('nosniff');
+    });
 });

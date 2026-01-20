@@ -2,7 +2,11 @@
   "name": "hello-containerd-nodejs",
   "version": "1.0.0",
   "description": "Simple node.js app for containerd",
-  "main": "app.js",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "jest --coverage"
+  },
   "dependencies": {
     "express": "^5.2.1",
     "helmet": "^8.1.0"
@@ -13,7 +17,11 @@
   },
   "jest": {
     "collectCoverage": true,
+    "coverageDirectory": "coverage",
     "coverageReporters": ["text", "lcov"],
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 80,
@@ -22,9 +30,5 @@
         "statements": 80
       }
     }
-  },
-  "scripts": {
-    "start": "node app.js",
-    "test": "jest --coverage"
   }
 }
