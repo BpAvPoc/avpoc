@@ -106,7 +106,7 @@ jobs:
 
       - name: Tag and Push
         env:
-          IMAGE_PATH: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_PATH: ${{ env.REGISTRY }}/${{ github.repository }}
         run: |
           # Login using global registry variable
           echo "${{ secrets.GITHUB_TOKEN }}" | nerdctl login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
