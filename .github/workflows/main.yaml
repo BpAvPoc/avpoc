@@ -23,7 +23,7 @@ jobs:
       - name: Install & Test
         working-directory: ./src 
         run: |
-          npm install
+          npm ci
           npm test -- --coverage
           
       - name: Upload Coverage Artifacts
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.1
-      
+
       - name: AppArmor Override
         run: |
           cat <<EOT | sudo tee "/etc/apparmor.d/usr.local.bin.rootlesskit"
